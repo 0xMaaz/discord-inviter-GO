@@ -98,8 +98,28 @@ func Bypass(serverid string, token string) {
 	} else {
 		color.Red("Failed to bypass Token %v", resp.StatusCode)
 	}
-
 }
+
+func React(channelid string, messageid string, reactionid string, token string) {
+	url := "https://discord.com/api/v9/channels/" + channelid + "/messages/" + messageid + "/reactions/" + reactionid + "/%40me"
+	json_data := "{\"response\":true}"
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer([]byte(json_data)))
+	if err != nil {
+		color.Red("Error while making http request %v \n", err)
+	}
+	req.Header.Set("authorization", token)
+	httpClient := http.Client{}
+	resp, err := httpClient.Do(commonHeaders(req))
+	if err != nil {
+		color.Red("Error while sending HTTP request reaction %v \n", err)
+	}
+	if resp.StatusCode == 201 || resp.StatusCode == 204 {
+		color.Green("Successfully reacted to verification!")
+	} else {
+		color.Red("Failed to bypass Token %v", resp.StatusCode)
+	}
+}
+
 func joinGuild(inviteCode string, token string) {
 	url := "https://discord.com/api/v9/invites/" + inviteCode
 	fmt.Println(url)
@@ -250,7 +270,6 @@ func main() {
 		}
 		wg.Wait()
 		elapsed := time.Since(start)
-		color.Blue("Consider Starring this Repo on github for further updates! Happy Malicious Activity!")
 		fmt.Printf("Joining took only %s", elapsed)
 		color.Blue("Do you wish to bypass member screening if any? then enter the serverID. Leave empty to exit the program")
 		var serverID string 
@@ -268,11 +287,33 @@ func main() {
 				}(i)
 			}
 			wg.Wait()
-			
 		}
 
+		color.Blue("Enter channel ID:")
+		var channelID string
+		fmt.Scanln(&channelID)
+		color.Blue("Enter message ID:")
+		var messageID string
+		fmt.Scanln(&messageID)
+		color.Blue("Enter reaction ID:")
+		var reactionID string
+		fmt.Scanln(&reactionID)
+		if channelID == "" {
+			return
+		} else {
+			color.Blue("WORKING")
+			var wg sync.WaitGroup
+			wg.Add(len(lines))
+			for i := 0; i < len(lines); i++ {
+				time.Sleep(5 * time.Millisecond)
+				go func(i int) {
+					defer wg.Done()
+					React(channelID, messageID, reactionID, lines[i])
+				}(i)
+			}
+			wg.Wait()
+		}
 		
-
 	} else if mode == 1 {
 		color.Blue("Make sure that invites.txt contains one Invite CODE on each line. It would not work with Invite links, only CODES.s")
 		invites, err := readLines("invites.txt")
